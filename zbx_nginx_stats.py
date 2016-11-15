@@ -7,24 +7,7 @@ try:
 except:
     import simplejson as json
 
-zabbix_host = '127.0.0.1'   # Zabbix server IP
-zabbix_port = 10051         # Zabbix server port
-hostname = 'Zabbix Agent'   # Name of monitored host, like it shows in zabbix web ui
-time_delta = 1              # grep interval in minutes
-
-# URL to nginx stat (http_stub_status_module)
-stat_url = 'https://nginx.server/nginx_stat'
-
-# Nginx log file path
-nginx_log_file_path = '/var/log/nginx/access.log'
-
-# Optional Basic Auth
-username = 'user'
-password = 'pass'
-
-# Temp file, with log file cursor position
-seek_file = '/tmp/nginx_log_stat'
-
+import config
 
 class Metric(object):
     def __init__(self, host, key, value, clock=None):
@@ -134,7 +117,7 @@ def write_seek(file, value):
 
 #print '[12/Mar/2014:03:21:13 +0400]'
 
-d = datetime.datetime.now()-datetime.timedelta(minutes=time_delta)
+d = datetime.datetime.now()-datetime.timedelta(minutes=config.time_delta)
 minute = int(time.mktime(d.timetuple()) / 60)*60
 d = d.strftime('%d/%b/%Y:%H:%M')
 
@@ -145,12 +128,12 @@ tps = [0]*60
 res_code = {}
 res_time_list = []
 
-nf = open(nginx_log_file_path, 'r')
+nf = open(config.nginx_log_file_path, 'r')
 
-new_seek = seek = read_seek(seek_file)
+new_seek = seek = read_seek(config.seek_file)
 
 # if new log file, don't do seek
-if os.path.getsize(nginx_log_file_path) > seek:
+if os.path.getsize(config.nginx_log_file_path) > seek:
     nf.seek(seek)
 
 line = nf.readline()
@@ -174,7 +157,7 @@ while line:
     line = nf.readline()
 
 if total_rps != 0:
-    write_seek(seek_file, str(new_seek))
+    write_seek(config.seek_file, str(new_seek))
 
 nf.close()
 
@@ -182,7 +165,7 @@ if len(res_time_list) > 0:
     average_response = sum(res_time_list) / len(res_time_list);
 
 metric = (len(sys.argv) >= 2) and re.match(r'nginx\[(.*)\]', sys.argv[1], re.M | re.I).group(1) or False
-data = get(stat_url, username, password).split('\n')
+data = get(config.stat_url, config.username, config.password).split('\n')
 data = parse_nginx_stat(data)
 
 data_to_send = []
@@ -190,18 +173,18 @@ data_to_send = []
 # Adding the metrics to response
 if not metric:
     for i in data:
-        data_to_send.append(Metric(hostname, ('nginx[%s]' % i), data[i]))
+        data_to_send.append(Metric(config.hostname, ('nginx[%s]' % i), data[i]))
 else:
     print data[metric]
 
 # Adding the request per seconds to response
 for t in range(0,60):
-    data_to_send.append(Metric(hostname, 'nginx[rps]', rps[t], minute+t))
+    data_to_send.append(Metric(config.hostname, 'nginx[rps]', rps[t], minute+t))
 
 # Adding the response codes stats to respons
 for t in res_code:
-    data_to_send.append(Metric(hostname, ('nginx[%s]' % t), res_code[t]))
+    data_to_send.append(Metric(config.hostname, ('nginx[%s]' % t), res_code[t]))
 
-data_to_send.append(Metric(hostname, 'nginx[average_response]', average_response))
+data_to_send.append(Metric(config.hostname, 'nginx[average_response]', average_response))
 
-send_to_zabbix(data_to_send, zabbix_host, zabbix_port)
+send_to_zabbix(data_to_send, config.zabbix_host, config.zabbix_port)
