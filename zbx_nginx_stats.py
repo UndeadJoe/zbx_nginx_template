@@ -139,7 +139,7 @@ minute = int(time.mktime(d.timetuple()) / 60)*60
 d = d.strftime('%d/%b/%Y:%H:%M')
 
 total_rps = 0
-average_response = 0;
+average_response = 0.0;
 rps = [0]*60
 tps = [0]*60
 res_code = {}
@@ -160,8 +160,10 @@ while line:
         total_rps += 1
         sec = int(re.match('(.*):(\d+):(\d+):(\d+)\s', line).group(4))
         code = re.match(r'(.*)"\s(\d*)\s', line).group(2)
-        res_time = int(re.match(r'(.*)"\s(\d*)\s(\d*)', line).group(3))
-        res_time_list.append(res_time)
+        c = re.match(r'(.*)"\s(\d*)\s(\d*).(\d*)', line).group(3) + '.' + re.match(r'(.*)"\s(\d*)\s(\d*).(\d*)', line).group(4)
+        res_time = float(c)
+        if (res_time > 0.0):
+            res_time_list.append(res_time)
 
         if code in res_code:
             res_code[code] += 1
