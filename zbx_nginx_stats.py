@@ -139,9 +139,11 @@ minute = int(time.mktime(d.timetuple()) / 60)*60
 d = d.strftime('%d/%b/%Y:%H:%M')
 
 total_rps = 0
+average_response = 0;
 rps = [0]*60
 tps = [0]*60
 res_code = {}
+res_time_list = []
 
 nf = open(nginx_log_file_path, 'r')
 
@@ -158,6 +160,9 @@ while line:
         total_rps += 1
         sec = int(re.match('(.*):(\d+):(\d+):(\d+)\s', line).group(4))
         code = re.match(r'(.*)"\s(\d*)\s', line).group(2)
+        res_time = int(re.match(r'(.*)"\s(\d*)\s(\d*)', line).group(3))
+        res_time_list.append(res_time)
+
         if code in res_code:
             res_code[code] += 1
         else:
@@ -170,6 +175,8 @@ if total_rps != 0:
     write_seek(seek_file, str(new_seek))
 
 nf.close()
+
+average_response = sum(res_time_list) / len(res_time_list);
 
 metric = (len(sys.argv) >= 2) and re.match(r'nginx\[(.*)\]', sys.argv[1], re.M | re.I).group(1) or False
 data = get(stat_url, username, password).split('\n')
@@ -192,5 +199,6 @@ for t in range(0,60):
 for t in res_code:
     data_to_send.append(Metric(hostname, ('nginx[%s]' % t), res_code[t]))
 
+data_to_send.append(Metric(hostname, 'nginx[average_response]', average_response))
 
 send_to_zabbix(data_to_send, zabbix_host, zabbix_port)
