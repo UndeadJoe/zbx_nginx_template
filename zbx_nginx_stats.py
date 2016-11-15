@@ -178,7 +178,8 @@ if total_rps != 0:
 
 nf.close()
 
-average_response = sum(res_time_list) / len(res_time_list);
+if len(res_time_list) > 0:
+    average_response = sum(res_time_list) / len(res_time_list);
 
 metric = (len(sys.argv) >= 2) and re.match(r'nginx\[(.*)\]', sys.argv[1], re.M | re.I).group(1) or False
 data = get(stat_url, username, password).split('\n')
