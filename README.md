@@ -16,6 +16,7 @@ It's accumulate nginx stats and parse the access.log (just pice of log at once) 
 - Active\Keepalive connections
 - Header and body reading
 - Accepted, handled connections
+- Average requests time
 
 ## Install
 
