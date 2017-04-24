@@ -17,3 +17,6 @@ password = 'pass'
 
 # Temp file, with log file cursor position
 seek_file = '/tmp/nginx_log_stat'
+
+# Minimal response time (in seconds)
+min_time = 0.100

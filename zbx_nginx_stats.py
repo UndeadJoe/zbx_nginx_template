@@ -145,7 +145,7 @@ while line:
         code = re.match(r'(.*)"\s(\d*)\s', line).group(2)
         c = re.match(r'(.*)"\s(\d*)\s(\d*).(\d*)', line).group(3) + '.' + re.match(r'(.*)"\s(\d*)\s(\d*).(\d*)', line).group(4)
         res_time = float(c)
-        if (res_time > 0.0):
+        if (res_time > config.min_time):
             res_time_list.append(res_time)
 
         if code in res_code:
